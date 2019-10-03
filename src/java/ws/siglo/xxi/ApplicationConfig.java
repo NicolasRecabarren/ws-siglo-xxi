@@ -22,8 +22,7 @@ public class ApplicationConfig extends Application {
     }
     
     private void addRestResourceClasses(Set<Class<?>> resources){
-        resources.add(ws.siglo.xxi.DeshabilitarResource.class);
-        resources.add(ws.siglo.xxi.HabilitarResource.class);
         resources.add(ws.siglo.xxi.ListarResource.class);
+        resources.add(ws.siglo.xxi.ManagementResource.class);
     }
 }
