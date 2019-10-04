@@ -52,6 +52,49 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Listar",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "urlencoded",
+					"urlencoded": [
+						{
+							"key": "procedure",
+							"value": "LISTAR_CATEGORIA_PLATO",
+							"type": "text"
+						},
+						{
+							"key": "data",
+							"value": "[{\n    \"param\": \"IO_CURSOR\",\n    \"tipo_dato\": \"cursor\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n},{\n    \"param\": \"PERROR\",\n    \"tipo_dato\": \"varchar2\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n}]",
+							"type": "text"
+						}
+					]
+				},
+				"url": {
+					"raw": "http://localhost:8080/ws-restaurante-siglo-xxi/webresources/listar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"ws-restaurante-siglo-xxi",
+						"webresources",
+						"listar"
+					]
+				}
+			},
+			"response": []
 		}
 	],
 	"protocolProfileBehavior": {}
