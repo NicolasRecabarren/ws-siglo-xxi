@@ -16,7 +16,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.json.Json;
+//import javax.json.Json;
 //import javax.json.JsonObject;
 //import javax.json.JsonObjectBuilder;
 import javax.ws.rs.core.Context;
@@ -59,33 +59,6 @@ public class ManagementResource {
     public Response getJson(@QueryParam("entity") String entity, @QueryParam("id") int id) {
         Connection oConn = new OracleConnection().getConexion();
         entity = entity.toUpperCase();
-        
-        String statement = "PKG_MANTENEDORES.DESHABILITAR_"+entity+"(?,?)";
-        String msj  = "";
-        
-        CallableStatement cStmt;
-        try {
-            //cStmt = oConn.prepareCall("{call PKG_MANTENEDORES.DESHABILITAR_CATEGORIA_PLATO(?, ?)}");
-            cStmt = oConn.prepareCall("{call "+statement+"}");
-            cStmt.registerOutParameter(2, Types.NVARCHAR);
-            
-            cStmt.setInt(1, id);
-            cStmt.setString(2, msj);
-            
-            cStmt.execute();
-            msj = cStmt.getString(2);
-            oConn.close();
-            
-        } catch (SQLException ex) {
-            Logger.getLogger(ManagementResource.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        
-        /*JsonObjectBuilder jsonObjBuilder = Json.createObjectBuilder();
-        jsonObjBuilder.add("resultado", "Procedimiento ejecutado correctamente.");
-        jsonObjBuilder.add("mensaje", msj);
-        JsonObject oJson = jsonObjBuilder.build();*/
-        
-        //return Response.ok(oJson.toString())
         return Response.ok("")
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
