@@ -96,6 +96,14 @@ public class ListarResource {
         JsonParser parser = new JsonParser();
         JsonArray jsonArrayData = parser.parse(jsonStringData).getAsJsonArray();
         
+        // Agregamos el parámetro de tipo out para guardar el mensaje que nos devuelva la base de datos.
+        JsonObject msjErrorParam = new JsonObject();
+        msjErrorParam.addProperty("param", "PERROR");
+        msjErrorParam.addProperty("tipo_dato", "varchar2");
+        msjErrorParam.addProperty("tipo_param", "OUT");
+        msjErrorParam.addProperty("value", "");
+        jsonArrayData.add(msjErrorParam);
+        
         // Preparamos el call del procedimiento y la cantidad de parametros que le setearemos.
         for( int i = 0; i < jsonArrayData.size(); i++){
             statement = statement+"?,";
@@ -179,7 +187,11 @@ public class ListarResource {
             Logger.getLogger(ManagementResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        return Response.ok(jsonRS.toString())
+        JsonObject jsonResponse = new JsonObject();
+        jsonResponse.addProperty("msj", msj);
+        jsonResponse.add("resultados",jsonRS);
+        
+        return Response.ok(jsonResponse.toString())
             .header("Access-Control-Allow-Origin", "*")
             .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
             .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")

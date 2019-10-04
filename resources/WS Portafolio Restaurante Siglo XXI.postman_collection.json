@@ -22,7 +22,7 @@
 					"urlencoded": [
 						{
 							"key": "data",
-							"value": "[{\n    \"param\": \"PID_CATEGORIA\",\n    \"tipo_dato\": \"number\",\n    \"tipo_param\": \"IN\",\n    \"value\": \"21\"\n},{\n    \"param\": \"PDESCRIPCION\",\n    \"tipo_dato\": \"varchar2\",\n    \"tipo_param\": \"IN\",\n    \"value\": \"BAJATIVOS\"\n},\n{\n    \"param\": \"PERROR\",\n    \"tipo_dato\": \"varchar2\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n}]",
+							"value": "[{\n    \"param\": \"PID_CATEGORIA\",\n    \"tipo_dato\": \"number\",\n    \"tipo_param\": \"IN\",\n    \"value\": \"21\"\n},{\n    \"param\": \"PDESCRIPCION\",\n    \"tipo_dato\": \"varchar2\",\n    \"tipo_param\": \"IN\",\n    \"value\": \"bajativo\"\n}]",
 							"type": "text"
 						},
 						{
@@ -75,7 +75,7 @@
 						},
 						{
 							"key": "data",
-							"value": "[{\n    \"param\": \"IO_CURSOR\",\n    \"tipo_dato\": \"cursor\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n},{\n    \"param\": \"PERROR\",\n    \"tipo_dato\": \"varchar2\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n}]",
+							"value": "[{\n    \"param\": \"IO_CURSOR\",\n    \"tipo_dato\": \"cursor\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n}]",
 							"type": "text"
 						}
 					]
