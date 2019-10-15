@@ -13,10 +13,10 @@ public class OracleConnection {
     
     public OracleConnection() {
         this.driver = "oracle.jdbc.driver.OracleDriver";
-        this.bd = "XE";
+        this.bd = "oracle";
         this.ip = "localhost";
-        this.usr = "system";
-        this.pass = "system";
+        this.usr = "RESTAURANTE";
+        this.pass = "RESTAURANTE";
         this.url = new String("jdbc:oracle:thin:@" + ip + ":1521:" + bd);
         
         try {

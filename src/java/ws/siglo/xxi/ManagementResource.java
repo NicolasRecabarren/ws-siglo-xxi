@@ -70,12 +70,12 @@ public class ManagementResource {
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postJson(@FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
+    public Response postJson(@FormParam("package") String packageName,@FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
         
         // Generamos la instancia de la conexión a la base de datos.
         Connection oConn = new OracleConnection().getConexion();
         
-        String statement = "PKG_MANTENEDORES."+procedureName.toUpperCase()+"(";
+        String statement = packageName.toUpperCase()+"."+procedureName.toUpperCase()+"(";
         
         // Parseamos el JSON y obtenemos sus datos para generar los parámetros de la llamada del procedimiento.
         JsonParser parser = new JsonParser();

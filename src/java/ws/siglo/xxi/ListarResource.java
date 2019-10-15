@@ -17,6 +17,8 @@ import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 //import javax.json.Json;
@@ -85,12 +87,12 @@ public class ListarResource {
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postJson(@FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
+    public Response postJson(@FormParam("package") String packageName, @FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
         
         // Generamos la instancia de la conexión a la base de datos.
         Connection oConn = new OracleConnection().getConexion();
         
-        String statement = "PKG_MANTENEDORES."+procedureName.toUpperCase()+"(";
+        String statement = packageName.toUpperCase()+"."+procedureName.toUpperCase()+"(";
         
         // Parseamos el JSON y obtenemos sus datos para generar los parámetros de la llamada del procedimiento.
         JsonParser parser = new JsonParser();
@@ -112,7 +114,11 @@ public class ListarResource {
         
         String msj  = "";
         CallableStatement cStmt;
+        JsonArray values = new JsonArray();
+        
         JsonArray jsonRS = new JsonArray();
+        
+        ArrayList cursores = new ArrayList();
         
         try {
             cStmt = oConn.prepareCall("{call "+statement+"}");
@@ -136,6 +142,7 @@ public class ListarResource {
                             break;
                         case "CURSOR":
                             cStmt.registerOutParameter(paramName, OracleTypes.CURSOR);
+                            cursores.add(paramName);
                             break;
                     }
                 }
@@ -158,38 +165,50 @@ public class ListarResource {
             cStmt.execute();
             // Obtenemos el mensaje de la BD.
             msj = cStmt.getString("PERROR");
-            System.out.print(cStmt.getObject("IO_CURSOR"));
-            ResultSet resultados = (ResultSet)cStmt.getObject("IO_CURSOR");
             
-            while(resultados.next()){
-                
-                // Obtenemos la cantidad de columnas del registro encontrado.
-                ResultSetMetaData rsmd = resultados.getMetaData();
-                int columnsNumber = rsmd.getColumnCount();
-                
-                JsonObject rsJson = new JsonObject();
-                for(int i=1; i <= columnsNumber; i++){
-                    switch(rsmd.getColumnTypeName(i)){
-                        case "NUMBER":
-                            rsJson.addProperty(rsmd.getColumnName(i), resultados.getInt(i));
-                            break;
-                        case "VARCHAR2":
-                            rsJson.addProperty(rsmd.getColumnName(i), resultados.getString(i));
-                            break;
-                    }
+            if("OK".equals(msj)){
+            
+                for (int i = 0; i < cursores.size(); i++) {
+                        
+                    System.out.print(cStmt.getObject(cursores.get(i).toString()));
+                    ResultSet resultados = (ResultSet)cStmt.getObject(cursores.get(i).toString());
+                    jsonRS = new JsonArray(); 
+                    
+                    while(resultados.next()){
+
+                        // Obtenemos la cantidad de columnas del registro encontrado.
+                        ResultSetMetaData rsmd = resultados.getMetaData();
+                        int columnsNumber = rsmd.getColumnCount();
+
+                        JsonObject rsJson = new JsonObject();
+
+                        for(int j=1; j <= columnsNumber; j++){
+                            switch(rsmd.getColumnTypeName(j)){
+                                case "NUMBER":
+                                    rsJson.addProperty(rsmd.getColumnName(j), resultados.getInt(j));
+                                    break;
+                                case "VARCHAR2":
+                                    rsJson.addProperty(rsmd.getColumnName(j), resultados.getString(j));
+                                    break;
+                            }
+                        }
+
+                        jsonRS.add(rsJson.getAsJsonObject());
+                    }  
+                    values.add(jsonRS);
                 }
-                
-                jsonRS.add(rsJson.getAsJsonObject());
             }
+                        
             // Cerramos la conexión a la BD.
             oConn.close();
         } catch (SQLException ex) {
+            msj = ex.getMessage();
             Logger.getLogger(ManagementResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         JsonObject jsonResponse = new JsonObject();
         jsonResponse.addProperty("msj", msj);
-        jsonResponse.add("resultados",jsonRS);
+        jsonResponse.add("resultados",values);
         
         return Response.ok(jsonResponse.toString())
             .header("Access-Control-Allow-Origin", "*")
