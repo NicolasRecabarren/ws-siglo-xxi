@@ -14,6 +14,7 @@ import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 //import javax.json.Json;
@@ -146,7 +147,7 @@ public class ManagementResource {
         }
         
         JsonObject responseJson = new JsonObject();
-        responseJson.addProperty("mensaje_bd", msj);
+        responseJson.addProperty("msj", msj);
         
         return Response.ok(responseJson.toString())
             .header("Access-Control-Allow-Origin", "*")
