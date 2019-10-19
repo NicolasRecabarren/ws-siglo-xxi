@@ -10,6 +10,12 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.sql.CallableStatement;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -32,6 +38,16 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import oracle.sql.BLOB;
+import oracle.sql.CLOB;
+import java.io.UnsupportedEncodingException;
+import java.sql.Blob;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Base64;
+import java.util.Date;
+import sun.misc.BASE64Decoder;
+
 
 
 /**
@@ -71,7 +87,7 @@ public class ManagementResource {
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postJson(@FormParam("package") String packageName,@FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
+    public Response postJson(@FormParam("package") String packageName,@FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) throws UnsupportedEncodingException, ParseException {
         
         // Generamos la instancia de la conexión a la base de datos.
         Connection oConn = new OracleConnection().getConexion();
@@ -119,6 +135,12 @@ public class ManagementResource {
                         case "NUMBER":
                             cStmt.registerOutParameter(paramName, Types.INTEGER);
                             break;
+                        case "CLOB":
+                            cStmt.registerOutParameter(paramName, Types.CLOB);
+                            break;
+                        case "BLOB":
+                            cStmt.registerOutParameter(paramName, Types.BLOB);
+                            break;
                     }
                 }
                 
@@ -127,8 +149,37 @@ public class ManagementResource {
                     case "VARCHAR2":
                         cStmt.setString(paramName, value);
                         break;
+                    case "DATE":
+                        Date date =new SimpleDateFormat("dd/MM/yyyy HH:mm:ss").parse(value);  
+                        cStmt.setDate(paramName, (java.sql.Date) date);
+                        break;
                     case "NUMBER":
                         cStmt.setInt(paramName, Integer.parseInt(value));
+                        break;
+                    case "CLOB":
+                        byte[] binaryData = null;
+                        try {
+                            binaryData = (value).getBytes(StandardCharsets.UTF_16LE);;
+                        }
+                        catch (Exception ex) {
+                            binaryData = null;
+                        } 
+                        CLOB clob = createClob(binaryData, oConn);
+                        cStmt.setClob(paramName, clob);
+                        
+                        break;
+                    case "BLOB":
+                        byte[] binaryDataBLOB = null;
+                        try {
+                            binaryDataBLOB = Base64.getMimeDecoder().decode(new String(value));
+                        } catch (Exception ex) {
+                            binaryDataBLOB = null;
+                        }
+                        
+                        Blob blob = createBlob(binaryDataBLOB, oConn);
+                        
+                        cStmt.setBlob(paramName, blob);
+                        
                         break;
                 }
             }
@@ -164,4 +215,47 @@ public class ManagementResource {
     @Consumes(MediaType.APPLICATION_JSON)
     public void putJson(String content) {
     }
+    
+    private CLOB createClob(byte[] data, Connection conn) {
+        CLOB clob = null; 
+
+        try { 
+            clob = CLOB.createTemporary(conn, false, oracle.sql.CLOB.DURATION_SESSION);
+
+            clob.open(CLOB.MODE_READWRITE);
+
+            OutputStream out = (OutputStream) clob.setAsciiStream(0L);
+
+            out.write(data);
+            out.flush();
+            out.close();
+        }
+        catch (Exception e) {
+        }
+        finally {
+            try {
+                if (clob != null && clob.isOpen()) clob.close();
+            }
+            catch (SQLException e) {
+            }
+        }
+        return clob;
+    }
+    
+    private Blob createBlob(byte[] data, Connection conn) {
+        Blob blob = null; 
+
+        try { 
+            blob = conn.createBlob();
+            blob.setBytes(1, data);
+
+        }
+        catch (Exception e) {
+        }
+        finally {
+        }
+
+        return blob;
+    }
+    
 }

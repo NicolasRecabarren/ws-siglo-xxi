@@ -7,18 +7,28 @@ package ws.siglo.xxi;
 
 import Model.OracleConnection;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonObject;
-import java.math.BigDecimal;
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.Reader;
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
+import java.sql.Blob;
 import java.sql.CallableStatement;
+import java.sql.Clob;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 //import javax.json.Json;
@@ -38,6 +48,10 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import oracle.jdbc.OracleTypes;
 
+import org.apache.xml.security.utils.Base64;
+import oracle.sql.CLOB;
+import oracle.sql.BLOB;
+import sun.misc.BASE64Encoder;
 /**
  * REST Web Service
  *
@@ -87,7 +101,7 @@ public class ListarResource {
     
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    public Response postJson(@FormParam("package") String packageName, @FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) {
+    public Response postJson(@FormParam("package") String packageName, @FormParam("procedure") String procedureName,@FormParam("data") String jsonStringData) throws IOException {
         
         // Generamos la instancia de la conexión a la base de datos.
         Connection oConn = new OracleConnection().getConexion();
@@ -144,6 +158,12 @@ public class ListarResource {
                             cStmt.registerOutParameter(paramName, OracleTypes.CURSOR);
                             cursores.add(paramName);
                             break;
+                        case "CLOB":
+                            cStmt.registerOutParameter(paramName, Types.CLOB);
+                            break;
+                        case "BLOB":
+                            cStmt.registerOutParameter(paramName, Types.BLOB);
+                            break;
                     }
                 }
                 
@@ -155,9 +175,33 @@ public class ListarResource {
                     case "NUMBER":
                         cStmt.setInt(paramName, Integer.parseInt(value));
                         break;
-                    /*case "CURSOR":
-                        cStmt.setCursorName("IO_CURSOR");
-                        break;*/
+                    case "CLOB":
+                        byte[] binaryData = null;
+                        try {
+                            binaryData = (value).getBytes(StandardCharsets.UTF_16LE);;
+                        }
+                        catch (Exception ex) {
+                            binaryData = null;
+                        } 
+                        CLOB clob = createClob(binaryData, oConn);
+                        cStmt.setClob(paramName, clob);
+                        
+                        break;
+                    case "BLOB":
+                        byte[] binaryDataBLOB = null;
+                        
+                        try {
+                            byte[] tmp = java.util.Base64.getEncoder().encode(value.getBytes());
+                            binaryDataBLOB = java.util.Base64.getDecoder().decode(new String(tmp).getBytes("UTF-8"));
+                        } catch (UnsupportedEncodingException e) {
+                            // TODO Auto-generated catch block
+                            e.printStackTrace();
+                        }
+                        
+                        BLOB blob = createBlob(binaryDataBLOB, oConn);                        
+                        cStmt.setBlob(paramName, blob);
+                        
+                        break;
                 }
             }
             
@@ -187,8 +231,19 @@ public class ListarResource {
                                 case "NUMBER":
                                     rsJson.addProperty(rsmd.getColumnName(j), resultados.getInt(j));
                                     break;
+                                case "DATE":
+                                    rsJson.addProperty(rsmd.getColumnName(j), resultados.getString(j));
+                                    break;
                                 case "VARCHAR2":
                                     rsJson.addProperty(rsmd.getColumnName(j), resultados.getString(j));
+                                    break;
+                                case "CLOB":
+                                    Clob clob = resultados.getClob(j);
+                                    rsJson.addProperty(rsmd.getColumnName(j), clobToString(clob));
+                                    break;
+                                case "BLOB":
+                                    Blob blob = resultados.getBlob(j);
+                                    rsJson.addProperty(rsmd.getColumnName(j), blobToString(blob));
                                     break;
                             }
                         }
@@ -215,5 +270,106 @@ public class ListarResource {
             .header("Access-Control-Allow-Methods", "POST, GET, PUT, UPDATE, OPTIONS")
             .header("Access-Control-Allow-Headers", "Content-Type, Accept, X-Requested-With")
             .build();
+    }
+    
+    private CLOB createClob(byte[] data, Connection conn) {
+        CLOB clob = null; 
+
+        try { 
+            clob = CLOB.createTemporary(conn, false, oracle.sql.CLOB.DURATION_SESSION);
+
+            clob.open(CLOB.MODE_READWRITE);
+
+            OutputStream out = (OutputStream) clob.setAsciiStream(0L);
+
+            out.write(data);
+            out.flush();
+            out.close();
+        }
+        catch (Exception e) {
+        }
+        finally {
+            try {
+                if (clob != null && clob.isOpen()) clob.close();
+            }
+            catch (SQLException e) {
+            }
+        }
+        return clob;
+    }
+    
+    private BLOB createBlob(byte[] data, Connection conn) {
+        BLOB blob = null; 
+
+        try { 
+            blob = BLOB.createTemporary(conn, false, oracle.sql.CLOB.DURATION_SESSION);
+
+            blob.open(BLOB.MODE_READWRITE);
+
+            OutputStream out = (OutputStream) blob.setBinaryStream(0L);
+
+            out.write(data);
+            out.flush();
+            out.close();
+        }
+        catch (Exception e) {
+        }
+        finally {
+            try {
+                if (blob != null && blob.isOpen()) blob.close();
+            }
+            catch (SQLException e) {
+            }
+        }
+
+        return blob;
+    }
+    
+    /*********************************************************************************************
+    * From CLOB to String
+    * @return string representation of clob
+    *********************************************************************************************/
+    private String clobToString(java.sql.Clob data) throws IOException
+    {
+        StringBuffer str = new StringBuffer();
+        
+        try
+        {
+            if (data == null)
+                    return  "";
+              
+            String strng;                
+      
+            BufferedReader bufferRead = new BufferedReader(data.getCharacterStream());
+     
+            while ((strng=bufferRead .readLine())!=null)
+             str.append(strng);
+        }
+        catch (SQLException e)
+        {
+             return "";
+        }
+        catch (IOException e)
+        {
+             return "";
+        }
+
+        return str.toString();
+    }
+    
+     private String blobToString(java.sql.Blob data) throws SQLException
+    {
+        String s;
+        try{            
+            byte[] bdata = data.getBytes(1, (int) data.length());
+            BASE64Encoder encoder = new BASE64Encoder();
+            s = encoder.encode(bdata);
+        }
+        catch(Exception ex)
+        {
+            s = "";
+        }
+        
+        return s;
     }
 }
