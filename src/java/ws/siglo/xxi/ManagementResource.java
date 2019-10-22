@@ -194,6 +194,7 @@ public class ManagementResource {
             oConn.close();
             
         } catch (SQLException ex) {
+            msj = ex.getMessage();
             Logger.getLogger(ManagementResource.class.getName()).log(Level.SEVERE, null, ex);
         }
         
