@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "fd6a389e-a54a-4d29-adf4-316cd43901bf",
+		"_postman_id": "ff441b0e-0dfe-4836-b078-593673bbceee",
 		"name": "WS Portafolio Restaurante Siglo XXI",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -54,7 +54,39 @@
 			"response": []
 		},
 		{
-			"name": "Listar",
+			"name": "Listar Login",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"name": "Content-Type",
+						"value": "application/x-www-form-urlencoded",
+						"type": "text"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "package=PKG_LOGIN&procedure=INICIAR_SESION&data=[{\"param\":\"PUSUARIO\",\"tipo_dato\":\"varchar2\",\"tipo_param\":\"IN\",\"value\":\"admin\"},{\"param\":\"PCLAVE\",\"tipo_dato\":\"varchar2\",\"tipo_param\":\"IN\",\"value\":\"8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918\"},{\"param\":\"IO_CURSOR_USUARIO\",\"tipo_dato\":\"cursor\",\"tipo_param\":\"OUT\",\"value\":\"\"},{\"param\":\"IO_CURSOR_MAPA\",\"tipo_dato\":\"cursor\",\"tipo_param\":\"OUT\",\"value\":\"\"}]"
+				},
+				"url": {
+					"raw": "http://localhost:8080/ws-restaurante-siglo-xxi/webresources/listar",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "8080",
+					"path": [
+						"ws-restaurante-siglo-xxi",
+						"webresources",
+						"listar"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Listar Categoria",
 			"request": {
 				"method": "POST",
 				"header": [
@@ -76,6 +108,11 @@
 						{
 							"key": "data",
 							"value": "[{\n    \"param\": \"IO_CURSOR\",\n    \"tipo_dato\": \"cursor\",\n    \"tipo_param\": \"OUT\",\n    \"value\": \"\"\n}]",
+							"type": "text"
+						},
+						{
+							"key": "package",
+							"value": "PKG_MANTENEDORES",
 							"type": "text"
 						}
 					]
