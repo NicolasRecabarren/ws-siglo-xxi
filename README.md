@@ -5,5 +5,7 @@ Proyecto que tiene por objetivo realizar la comunicación a través de web servi
 
 ## Tecnologías utilizadas
 - Java EE
+- Oracle 11g XE
+- PL/SQL
 
 ## Proyecto con fines académicos.
